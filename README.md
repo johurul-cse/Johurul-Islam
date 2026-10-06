@@ -7,7 +7,7 @@ An autonomous, client-side web application built for the AI DevFest 2026 Vibe Co
 ## Participant
 
 - **Name:** Johurul Islam
-- **Registration Number:** DEV-FEST-2026-JI
+- **Registration Number:** 241-15-629
 
 ---
 
