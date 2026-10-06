@@ -13,7 +13,7 @@ An autonomous, client-side web application built for the AI DevFest 2026 Vibe Co
 
 ## Live Website
 
-- **Deployment URL:** https://tender-package-builder.pages.dev *(or GitHub Pages)*
+- **Deployment URL:** https://johurul-cse.github.io/Johurul-Islam/
 - **Repository URL:** https://github.com/johurul-cse/Johurul-Islam
 
 ---
