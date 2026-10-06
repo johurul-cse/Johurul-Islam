@@ -1,0 +1,33 @@
+{
+  "name": "tender-package-builder",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tender Document Package Builder - AI DevFest 2026",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johurul-cse/Johurul-Islam.git"
+  },
+  "keywords": [
+    "tender",
+    "pdf",
+    "package-builder",
+    "devfest-2026"
+  ],
+  "author": "Johurul Islam",
+  "license": "MIT",
+  "dependencies": {
+    "lucide-react": "^1.52.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "vite": "^7.3.1"
+  }
+}
