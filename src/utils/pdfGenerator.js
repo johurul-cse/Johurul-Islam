@@ -13,7 +13,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
  *     <tender_id> | Page X of Y. Y is the total number of pages in the package.
  * 6.4 The footer must be easy to read and must not cover the document's content.
  */
-export async function generateTenderPackage({ tender, requirements, matchedFilesMap, filesData }) {
+export async function generateTenderPackage({ tender, requirements, matchedFilesMap, filesData, sealFile, sealPages }) {
   const mergedPdf = await PDFDocument.create();
   
   const fontRegular = await mergedPdf.embedFont(StandardFonts.Helvetica);
@@ -226,6 +226,40 @@ export async function generateTenderPackage({ tender, requirements, matchedFiles
     }
   }
 
+  // 2.5 CREATE INDEX PAGE (Bonus)
+  const indexPage = mergedPdf.insertPage(1, [595.28, 841.89]);
+  let idxCursorY = pageHeight - 55;
+  
+  indexPage.drawText("TABLE OF CONTENTS", {
+    x: marginX,
+    y: idxCursorY,
+    size: 16,
+    font: fontBold,
+    color: rgb(0.1, 0.18, 0.3)
+  });
+  
+  idxCursorY -= 30;
+  indexPage.drawText("Document", { x: marginX, y: idxCursorY, size: 10, font: fontBold, color: rgb(0.2, 0.25, 0.35) });
+  indexPage.drawText("Start Page", { x: marginX + 380, y: idxCursorY, size: 10, font: fontBold, color: rgb(0.2, 0.25, 0.35) });
+  idxCursorY -= 15;
+  
+  indexPage.drawLine({
+    start: { x: marginX, y: idxCursorY + 5 },
+    end: { x: marginX + 440, y: idxCursorY + 5 },
+    thickness: 0.5,
+    color: rgb(0.8, 0.84, 0.9)
+  });
+  
+  idxCursorY -= 15;
+
+  for (const docMap of documentStartPageMap) {
+    const titleToPrint = String(`${docMap.order}. ${docMap.title || 'Document ' + docMap.order}`).substring(0, 65);
+    indexPage.drawText(titleToPrint, { x: marginX, y: idxCursorY, size: 10, font: fontRegular, color: rgb(0.15, 0.2, 0.25) });
+    // Add 1 to startPage because we inserted this 1 index page before the documents
+    indexPage.drawText(`Page ${docMap.startPage + 1}`, { x: marginX + 380, y: idxCursorY, size: 10, font: fontRegular, color: rgb(0.3, 0.35, 0.4) });
+    idxCursorY -= 20;
+  }
+
   // 3. UNIVERSAL FOOTER ON EVERY PAGE
   // Rule 6.3: "Every page, including the cover, has a footer at the bottom: <tender_id> | Page X of Y. Y is the total number of pages in the package."
   // Rule 6.4: "The footer must be easy to read and must not cover the document's content."
@@ -268,6 +302,46 @@ export async function generateTenderPackage({ tender, requirements, matchedFiles
       font: fontRegular,
       color: rgb(0.22, 0.28, 0.36)
     });
+  }
+
+  // 4. APPLY SEAL/SIGNATURE (Bonus)
+  if (sealFile && sealFile.bytes) {
+    try {
+      const pngImage = await mergedPdf.embedPng(sealFile.bytes);
+      const fixedWidth = 100;
+      const fixedHeight = (pngImage.height / pngImage.width) * fixedWidth;
+
+      // Parse sealPages
+      let pagesToStamp = [];
+      const pStr = String(sealPages || 'all').toLowerCase().trim();
+      
+      if (pStr === 'all') {
+        for (let i = 0; i < totalPages; i++) pagesToStamp.push(i);
+      } else {
+        const parts = pStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        for (const num of parts) {
+          if (num >= 1 && num <= totalPages) {
+            pagesToStamp.push(num - 1);
+          }
+        }
+      }
+
+      for (const pageIdx of pagesToStamp) {
+        const page = mergedPdf.getPage(pageIdx);
+        const { width, height } = page.getSize();
+        
+        // Bottom right corner above footer
+        page.drawImage(pngImage, {
+          x: width - fixedWidth - 30,
+          y: 40,
+          width: fixedWidth,
+          height: fixedHeight,
+          opacity: 0.85
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to apply seal:", e);
+    }
   }
 
   const pdfBytes = await mergedPdf.save();

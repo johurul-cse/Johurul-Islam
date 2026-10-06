@@ -45,6 +45,11 @@ export default function App() {
 
   const fileInputRef = useRef(null);
   const jsonInputRef = useRef(null);
+  const sealInputRef = useRef(null);
+
+  // Seal / Signature state
+  const [sealFile, setSealFile] = useState(null);
+  const [sealPages, setSealPages] = useState('all');
 
   // Persistence to localStorage
   useEffect(() => {
@@ -350,7 +355,9 @@ export default function App() {
         tender: tenderData.tender,
         requirements: tenderData.requirements,
         matchedFilesMap: matchedFiles,
-        filesData
+        filesData,
+        sealFile,
+        sealPages
       });
 
       setGeneratedPdfBlob(result.blob);
@@ -394,6 +401,21 @@ export default function App() {
     if (isDuplicateAssignedElsewhere) return true;
 
     return false;
+  };
+
+  const handleSealUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/png') {
+      alert(lang === 'en' ? 'Only PNG images are supported for seal/signature.' : 'সিল/স্বাক্ষরের জন্য শুধুমাত্র PNG ছবি সমর্থিত।');
+      return;
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    setSealFile({
+      name: file.name,
+      bytes: new Uint8Array(arrayBuffer),
+      url: URL.createObjectURL(file)
+    });
   };
 
   return (
@@ -756,6 +778,65 @@ export default function App() {
               })}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* SECTION 4: Seal / Signature Upload (Optional Bonus) */}
+      <section className="card">
+        <div className="card-title-bar">
+          <div>
+            <div className="card-title">
+              <Sparkles size={20} color="#2563eb" />
+              {t.sealUploadTitle}
+            </div>
+            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+              {t.sealUploadSubtitle}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', marginTop: '16px' }}>
+          <div>
+            <button className="btn btn-outline" onClick={() => sealInputRef.current?.click()}>
+              <Upload size={16} />
+              {t.sealImagePlaceholder}
+            </button>
+            <input 
+              type="file" 
+              ref={sealInputRef} 
+              style={{ display: 'none' }} 
+              accept=".png,image/png" 
+              onChange={handleSealUpload} 
+            />
+            {sealFile && (
+              <div style={{ marginTop: '10px', fontSize: '13px', color: '#0f172a', fontWeight: 600 }}>
+                {sealFile.name} 
+                <button 
+                  style={{ background: 'none', border: 'none', color: '#ef4444', marginLeft: '10px', cursor: 'pointer' }}
+                  onClick={() => setSealFile(null)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+          {sealFile && (
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                {t.pagesToStampLabel}
+              </label>
+              <input 
+                type="text" 
+                className="select-input"
+                style={{ width: '100%', maxWidth: '300px' }}
+                value={sealPages}
+                onChange={(e) => setSealPages(e.target.value)}
+                placeholder="all, 1, 3, 5"
+              />
+            </div>
+          )}
+          {sealFile && (
+            <img src={sealFile.url} alt="Seal Preview" style={{ maxWidth: '100px', maxHeight: '60px', objectFit: 'contain', border: '1px dashed #cbd5e1', padding: '4px' }} />
+          )}
         </div>
       </section>
 

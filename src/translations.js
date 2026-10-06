@@ -70,7 +70,11 @@ export const translations = {
     indexPageStart: "Starts at Page",
     fileAlreadyMatched: "Already matched to another document",
     duplicateOf: "Duplicate copy of",
-    allResolved: "All requirements met. Ready to compile."
+    allResolved: "All requirements met. Ready to compile.",
+    sealUploadTitle: "4. Add Seal or Signature (Optional Bonus)",
+    sealUploadSubtitle: "Upload a PNG image to stamp on chosen pages",
+    sealImagePlaceholder: "Upload PNG Image...",
+    pagesToStampLabel: "Pages to stamp (e.g. 1, 2, 5 or 'all')"
   },
   bn: {
     appTitle: "টেন্ডার ডকুমেন্ট প্যাকেজ বিল্ডার",
@@ -143,6 +147,10 @@ export const translations = {
     indexPageStart: "শুরু পৃষ্ঠা",
     fileAlreadyMatched: "ইতোমধ্যে অন্য ডকুমেন্টে ব্যবহৃত হয়েছে",
     duplicateOf: "এর ডুপ্লিকেট কপি",
-    allResolved: "সকল শর্তাবলী পূরণ হয়েছে। প্যাকেজ তৈরি করা যাবে।"
+    allResolved: "সকল শর্তাবলী পূরণ হয়েছে। প্যাকেজ তৈরি করা যাবে।",
+    sealUploadTitle: "৪. সিল বা স্বাক্ষর যোগ করুন (ঐচ্ছিক)",
+    sealUploadSubtitle: "নির্দিষ্ট পৃষ্ঠায় স্ট্যাম্প করার জন্য একটি PNG ছবি আপলোড করুন",
+    sealImagePlaceholder: "PNG ছবি আপলোড করুন...",
+    pagesToStampLabel: "পৃষ্ঠা নম্বর (যেমন: 1, 2, 5 অথবা 'all')"
   }
 };
