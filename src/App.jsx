@@ -248,19 +248,6 @@ export default function App() {
     const newMatches = { ...matchedFiles };
     let matchedCount = 0;
 
-    const keywords = [
-      { id: 'R01', keys: ['trade', 'license'] },
-      { id: 'R02', keys: ['tin'] },
-      { id: 'R03', keys: ['vat'] },
-      { id: 'R04', keys: ['solvency', 'bank'] },
-      { id: 'R05', keys: ['experience'] },
-      { id: 'R06', keys: ['audited', 'financial_statement'] },
-      { id: 'R07', keys: ['manufacturer', 'authorization'] },
-      { id: 'R08', keys: ['technical', 'proposal'] },
-      { id: 'R09', keys: ['financial', 'proposal'] },
-      { id: 'R10', keys: ['declaration', 'signed'] }
-    ];
-
     // Track used hashes to avoid matching duplicates to different documents
     const usedHashes = new Set();
     Object.entries(newMatches).forEach(([rId, fName]) => {
@@ -268,32 +255,49 @@ export default function App() {
       if (h) usedHashes.add(h);
     });
 
-    for (const kw of keywords) {
-      if (newMatches[kw.id]) continue; // already matched
+    // Phase 1: Score all (req, file) pairs dynamically based on title keywords
+    const scores = [];
+    for (const req of requirements) {
+      if (newMatches[req.id]) continue;
+      const titleStr = (req.title_en || '').toLowerCase();
+      const cleanTitle = titleStr.replace(/[^a-z0-9\s]/g, '');
+      const stopWords = ['certificate', 'statement', 'document', 'the', 'and', 'for', 'of', 'registration', 'form'];
+      const words = cleanTitle.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+      const keys = words.length > 0 ? words : cleanTitle.split(/\s+/).filter(w => w.length > 2);
 
-      // Find file that best matches
-      const matchedFile = currentAvailableFiles.find(fName => {
-        // Must not be already matched
-        if (Object.values(newMatches).includes(fName)) return false;
-        
-        // Hash must not be already used by a duplicate
+      for (const fName of currentAvailableFiles) {
+        if (Object.values(newMatches).includes(fName)) continue;
         const fHash = filesData[fName]?.hash;
-        if (fHash && usedHashes.has(fHash)) return false;
+        if (fHash && usedHashes.has(fHash)) continue;
 
         const lower = fName.toLowerCase();
-        // Priority for trade license: prefer trade_license_2026 over 2025 if both exist
-        if (kw.id === 'R01') {
-          return lower.includes('trade') || lower.includes('license');
+        let score = 0;
+        keys.forEach(k => {
+          if (lower.includes(k)) score += 1;
+        });
+        
+        if (score > 0) {
+          scores.push({ reqId: req.id, fName, score, hash: fHash });
         }
-        return kw.keys.some(k => lower.includes(k));
-      });
-
-      if (matchedFile) {
-        newMatches[kw.id] = matchedFile;
-        const fHash = filesData[matchedFile]?.hash;
-        if (fHash) usedHashes.add(fHash);
-        matchedCount++;
       }
+    }
+
+    // Sort by score descending to greedily assign the best matches first
+    scores.sort((a, b) => b.score - a.score);
+
+    // Phase 2: Assign matches
+    const matchedReqs = new Set();
+    const matchedFilesLocal = new Set();
+
+    for (const match of scores) {
+      if (matchedReqs.has(match.reqId) || matchedFilesLocal.has(match.fName) || (match.hash && usedHashes.has(match.hash))) {
+        continue;
+      }
+      newMatches[match.reqId] = match.fName;
+      matchedReqs.add(match.reqId);
+      matchedFilesLocal.add(match.fName);
+      if (match.hash) usedHashes.add(match.hash);
+      matchedCount++;
     }
 
     setMatchedFiles(newMatches);
